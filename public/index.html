@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskflow // Gateway</title>
+    
+    <!-- Self-Contained Local CSS Style Engine (No internet required) -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
+            border: 1px solid #f1f5f9;
+            padding: 2rem;
+        }
+
+        h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .space-y-4 > * + * {
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            color: #334155;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: #4f46e5;
+            color: #ffffff;
+            font-weight: 500;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+            transition: all 0.2s ease;
+            margin-top: 1.5rem;
+        }
+
+        .submit-btn:hover {
+            background-color: #4338ca;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .footer-toggle {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .toggle-text {
+            color: #94a3b8;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #4f46e5;
+            font-weight: 600;
+            margin-left: 0.25rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .toggle-btn:hover {
+            text-decoration: underline;
+        }
+
+        .error-box {
+            color: #ef4444;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 id="auth-title">Welcome Back</h2>
+        <p id="auth-subtitle" class="subtitle">Enter your details to log into your workspace</p>
+
+        <form id="auth-form" class="space-y-4">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required autocomplete="current-password">
+            </div>
+            <div id="error-msg" class="error-box"></div>
+            <button type="submit" id="submit-btn" class="submit-btn">Log In</button>
+        </form>
+
+        <div class="footer-toggle">
+            <span id="toggle-text" class="toggle-text">Don't have an account?</span>
+            <button id="toggle-auth" class="toggle-btn">Register here</button>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('todo_token')) window.location.href = '/dashboard';
+
+        let isLoginMode = true;
+        const authForm = document.getElementById('auth-form');
+        const authTitle = document.getElementById('auth-title');
+        const authSubtitle = document.getElementById('auth-subtitle');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleAuth = document.getElementById('toggle-auth');
+        const toggleText = document.getElementById('toggle-text');
+        const errorMsg = document.getElementById('error-msg');
+
+        toggleAuth.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLoginMode = !isLoginMode;
+            authTitle.innerText = isLoginMode ? 'Welcome Back' : 'Create Account';
+            authSubtitle.innerText = isLoginMode ? 'Enter your details to log into your workspace' : 'Sign up to safely track your priorities';
+            submitBtn.innerText = isLoginMode ? 'Log In' : 'Sign Up';
+            toggleText.innerText = isLoginMode ? "Don't have an account?" : "Already have an account?";
+            toggleAuth.innerText = isLoginMode ? 'Register here' : 'Login here';
+            errorMsg.style.display = 'none';
+        });
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Authentication event error');
+
+                if (isLoginMode) {
+                    localStorage.setItem('todo_token', data.token);
+                    localStorage.setItem('user_email', data.email);
+                    window.location.href = '/dashboard';
+                } else {
+                    alert('Registration complete! Moving to login.');
+                    toggleAuth.click();
+                }
+            } catch (err) {
+                errorMsg.innerText = err.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
